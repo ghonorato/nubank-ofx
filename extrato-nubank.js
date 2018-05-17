@@ -1,7 +1,7 @@
 
 $(function() {
 
-  function startOfx() {
+  function startOfx(from, to) {
     return `
 OFXHEADER:100
 DATA:OFXSGML
@@ -14,30 +14,50 @@ OLDFILEUID:NONE
 NEWFILEUID:NONE
 
 <OFX>
-<BANKMSGSRSV1>
-<STMTTRNRS>
-<STMTRS>
-<BANKTRANLIST>`;
-  }
-
-  function endOfx() {
-    return `
-</BANKTRANLIST>
-</STMTRS>
-</STMTTRNRS>
-</BANKMSGSRSV1>
+  <SIGNONMSGSRSV1>
+      <SONRS>
+          <STATUS>
+              <CODE>0
+              <SEVERITY>INFO
+          </STATUS>
+          <LANGUAGE>ENG
+          <FI>
+              <ORG>NUBANK
+              <FID>NUBANK
+          </FI>
+      </SONRS>
+  </SIGNONMSGSRSV1>
+  <BANKMSGSRSV1>
+    <STMTTRNRS>
+      <STMTRS>
+        <BANKACCTFROM>
+            <BANKID>NUBANK</BANKID>
+            <ACCTID>0</ACCTID>
+            <ACCTTYPE>LINEOFCREDIT</ACCTTYPE>
+        </BANKACCTFROM>
+        <BANKTRANLIST>
+          <DTSTART>${from}</DTSTART>
+          <DTEND>${to}</DTEND>`;
+          }
+        
+          function endOfx() {
+            return `
+        </BANKTRANLIST>
+      </STMTRS>
+    </STMTTRNRS>
+  </BANKMSGSRSV1>
 </OFX>`;
 
   }
 
   function bankStatement(date, amount, description) {
     return `
-<STMTTRN>
-<TRNTYPE>OTHER</TRNTYPE>
-<DTPOSTED>${date}</DTPOSTED>
-<TRNAMT>${amount}</TRNAMT>
-<MEMO>${description}</MEMO>
-</STMTTRN>`;
+      <STMTTRN>
+      <TRNTYPE>OTHER</TRNTYPE>
+      <DTPOSTED>${date}</DTPOSTED>
+      <TRNAMT>${amount * -1}</TRNAMT>
+      <MEMO>${description}</MEMO>
+      </STMTTRN>`;
   }
 
   function normalizeAmount(text) {
@@ -81,7 +101,7 @@ NEWFILEUID:NONE
   }
 
   function generateOfx() {
-    var ofx = startOfx();
+    var ofx = startOfx(normalizeDate($($.find('.period>span')[0]).text()), normalizeDate($($.find('.period>span')[1]).text()));
 
     $('.charge:visible').each(function(){
       var date = normalizeDate($(this).find('.time').text());
